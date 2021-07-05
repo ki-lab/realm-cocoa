@@ -38,7 +38,7 @@ import Realm
         if next is NSNull {
             return Element._nilValue()
         }
-        return dynamicBridgeCast(fromObjectiveC: next)
+        return dynamicBridgeCast(fromObjectiveC: next) as Element
     }
 }
 

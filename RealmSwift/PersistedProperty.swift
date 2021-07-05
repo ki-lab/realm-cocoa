@@ -285,7 +285,11 @@ extension Persisted: Encodable where Value: Encodable {
 
  If the Realm contains a value which is not a valid member of the enum (such as if it was written by a different sync client which disagrees on which values are valid), optional enum properties will return `nil`, and non-optional properties will abort the process.
  */
-public protocol PersistableEnum: _OptionalPersistable, RawRepresentable, CaseIterable, RealmEnum {}
+public protocol PersistableEnum: _OptionalPersistable, RawRepresentable, CaseIterable, RealmEnum { }
+
+extension PersistableEnum {
+    public init() { self = Self.allCases.first! }
+}
 
 /// A type which can be indexed.
 ///
@@ -367,32 +371,51 @@ extension Persisted: DiscoverablePersistedProperty where Value: _Persistable {
     }
 }
 
-// The actual storage for modern properties on objects
+// The actual storage for modern properties on objects.
+//
+// A newly created @Persisted will be either .unmanaged or .unmanagedNoDefault
+// depending on whether the user supplied a default value with `= value` when
+// defining the property. .unmanagedNoDefault turns into .unmanaged the first
+// time the property is read from, using a default value generated for the type.
+// If an unmanaged object is observed, that specific property is switched to
+// .unmanagedObserved so that the property can look up its name in the setter.
+//
+// When a new managed accessor is created, all properties are set to .managed.
+// When an existing unmanaged object is added to a Realm, existing non-collection
+// properties are set to .unmanaged, and collections are set to .managedCached,
+// reusing the existing instance of the collection (which are themselves promoted
+// to managed).
+//
+// The indexed and primary members of the unmanaged cases are used only for
+// schema discovery and are not always preserved once the Persisted is actually
+// used for anything.
 private enum PropertyStorage<T> {
-    // An unmanaged value. This can be either
-    case unmanaged(value: T, indexed: Bool = false, primary: Bool = false)
+// An unmanaged value. This is used as the initial state if the user did
+// supply a default value, or if an unmanaged property is read or written
+// (but not observed).
+case unmanaged(value: T, indexed: Bool = false, primary: Bool = false)
 
-    // The property is unmanaged and does not yet have a value. This state is
-    // used if the user does not supply a default value in their model definition
-    // and will be converted to the zero/empty value for the type when this
-    // property is first used.
-    case unmanagedNoDefault(indexed: Bool = false, primary: Bool = false)
+// The property is unmanaged and does not yet have a value. This state is
+// used if the user does not supply a default value in their model definition
+// and will be converted to the zero/empty value for the type when this
+// property is first used.
+case unmanagedNoDefault(indexed: Bool = false, primary: Bool = false)
 
-    // The property is unmanaged and the parent object has (or previously had)
-    // KVO observers, so we performed the additional initialization to set the
-    // property key on each property. We do not track indexed/primary in this
-    // state because those are needed only for schema discovery.
-    case unmanagedObserved(value: T, key: PropertyKey)
+// The property is unmanaged and the parent object has (or previously had)
+// KVO observers, so we performed the additional initialization to set the
+// property key on each property. We do not track indexed/primary in this
+// state because those are needed only for schema discovery. An unmanaged
+// property never transitions from this state back to .unmanaged.
+case unmanagedObserved(value: T, key: PropertyKey)
 
-    // The property is managed and so only needs to store the key to get/set
-    // the value on the parent object.
-    case managed(key: PropertyKey)
+// The property is managed and so only needs to store the key to get/set
+// the value on the parent object.
+case managed(key: PropertyKey)
 
-    // The property is managed and is storing a value which will be returned each
-    // time. This is used only for collection properties, which are themselves
-    // live objects and so only need to be created once. Caching them is both a
-    // performance optimization (creating them involves a few memory allocations)
-    // and is required for KVO to work correctly.
-    case managedCached(value: T, key: PropertyKey)
+// The property is managed and is storing a value which will be returned each
+// time. This is used only for collection properties, which are themselves
+// live objects and so only need to be created once. Caching them is both a
+// performance optimization (creating them involves a few memory allocations)
+// and is required for KVO to work correctly.
+case managedCached(value: T, key: PropertyKey)
 }
-
