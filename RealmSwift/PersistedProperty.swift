@@ -390,32 +390,32 @@ extension Persisted: DiscoverablePersistedProperty where Value: _Persistable {
 // schema discovery and are not always preserved once the Persisted is actually
 // used for anything.
 private enum PropertyStorage<T> {
-// An unmanaged value. This is used as the initial state if the user did
-// supply a default value, or if an unmanaged property is read or written
-// (but not observed).
-case unmanaged(value: T, indexed: Bool = false, primary: Bool = false)
+    // An unmanaged value. This is used as the initial state if the user did
+    // supply a default value, or if an unmanaged property is read or written
+    // (but not observed).
+    case unmanaged(value: T, indexed: Bool = false, primary: Bool = false)
 
-// The property is unmanaged and does not yet have a value. This state is
-// used if the user does not supply a default value in their model definition
-// and will be converted to the zero/empty value for the type when this
-// property is first used.
-case unmanagedNoDefault(indexed: Bool = false, primary: Bool = false)
+    // The property is unmanaged and does not yet have a value. This state is
+    // used if the user does not supply a default value in their model definition
+    // and will be converted to the zero/empty value for the type when this
+    // property is first used.
+    case unmanagedNoDefault(indexed: Bool = false, primary: Bool = false)
 
-// The property is unmanaged and the parent object has (or previously had)
-// KVO observers, so we performed the additional initialization to set the
-// property key on each property. We do not track indexed/primary in this
-// state because those are needed only for schema discovery. An unmanaged
-// property never transitions from this state back to .unmanaged.
-case unmanagedObserved(value: T, key: PropertyKey)
+    // The property is unmanaged and the parent object has (or previously had)
+    // KVO observers, so we performed the additional initialization to set the
+    // property key on each property. We do not track indexed/primary in this
+    // state because those are needed only for schema discovery. An unmanaged
+    // property never transitions from this state back to .unmanaged.
+    case unmanagedObserved(value: T, key: PropertyKey)
 
-// The property is managed and so only needs to store the key to get/set
-// the value on the parent object.
-case managed(key: PropertyKey)
+    // The property is managed and so only needs to store the key to get/set
+    // the value on the parent object.
+    case managed(key: PropertyKey)
 
-// The property is managed and is storing a value which will be returned each
-// time. This is used only for collection properties, which are themselves
-// live objects and so only need to be created once. Caching them is both a
-// performance optimization (creating them involves a few memory allocations)
-// and is required for KVO to work correctly.
-case managedCached(value: T, key: PropertyKey)
+    // The property is managed and is storing a value which will be returned each
+    // time. This is used only for collection properties, which are themselves
+    // live objects and so only need to be created once. Caching them is both a
+    // performance optimization (creating them involves a few memory allocations)
+    // and is required for KVO to work correctly.
+    case managedCached(value: T, key: PropertyKey)
 }
