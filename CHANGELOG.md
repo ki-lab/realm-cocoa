@@ -1,9 +1,6 @@
 x.y.z Release notes (yyyy-MM-dd)
 =============================================================
 ### Enhancements
-* Add `App.emailPasswordAuth.retryCustomConfirmation(email:completion:)` and `[App.emailPasswordAuth retryCustomConfirmation:completion:]`. 
-  These functions support retrying a [custom confirmation](https://docs.mongodb.com/realm/authentication/email-password/#run-a-confirmation-function) function.
-* Improve performance of many Dictionary operations, especially when KVO is being used.
 * Add a new property wrapper-based declaration syntax for properties on Realm
   Swift object classes. Rather than using `@objc dynamic` or the
   `RealmProperty` wrapper type, properties can now be declared with `@Persisted
@@ -56,9 +53,6 @@ x.y.z Release notes (yyyy-MM-dd)
   generic functions that operate on Dictionary-styled sequences.
 
 ### Fixed
-* <How to hit and notice issue? what was the impact?> ([#????](https://github.com/realm/realm-cocoa/issues/????), since v?.?.?)
-* Calling `-[RLMRealm deleteObjects:]` on a `RLMDictionary` cleared the
-  dictionary but did not actually delete the objects in the dictionary (since v10.8.0).
 * AnyRealmValue enum values are now supported in more places when creating
   objects.
 * Declaring a property as `RealmProperty<AnyRealmValue?>` will now report an
