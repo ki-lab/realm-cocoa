@@ -288,6 +288,7 @@ extension Persisted: Encodable where Value: Encodable {
 public protocol PersistableEnum: _OptionalPersistable, RawRepresentable, CaseIterable, RealmEnum { }
 
 extension PersistableEnum {
+    /// :nodoc:
     public init() { self = Self.allCases.first! }
 }
 
